@@ -1,0 +1,28 @@
+{
+  "name": "API-REST-Contatos",
+  "version": "1.0.0",
+  "description": "API REST em Node e MySQL que gerencia e disponibiliza uma agenda de contatos de pessoas.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Yuendel/API-REST-Contatos.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Yuendel/API-REST-Contatos/issues"
+  },
+  "homepage": "https://github.com/Yuendel/API-REST-Contatos#readme",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
+    "knex": "^0.95.7",
+    "mysql": "^2.18.1",
+    "nodemon": "^2.0.12",
+    "yup": "^0.32.9"
+  }
+}
