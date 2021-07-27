@@ -5,9 +5,6 @@ const knex = require('knex')({
         user: 'root',
         password: '',
         database: 'controle_De_Contatos',
-
-
-
     }
 });
 

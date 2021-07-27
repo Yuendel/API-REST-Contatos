@@ -1,6 +1,6 @@
 const express = require('express');
-const rotas = require('./rotas');
 const cors = require('cors');
+const rotas = require('./rotas');
 
 const app = express();
 
