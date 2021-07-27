@@ -1,27 +1,12 @@
 const knex = require('../conexao');
+const { schema } = require('../validacoes/schemaCadastroContato');
 
 const cadastrarContato = async (req, res) => {
     const { primeiroNome, ultimoNome, email, telefones } = req.body;
 
-
-    if (!primeiroNome) {
-        res.status(404).json('O campo de Primeiro Nome é Obrigatório! ')
-    }
-
-    if (!ultimoNome) {
-        res.status(404).json('O campo de Ultimo Nome é Obrigatório! ')
-    }
-
-    if (!email) {
-        res.status(404).json('O campo de E-mail é Obrigatório! ')
-    }
-
-    if (!telefones) {
-        res.status(404).json('Obrigatório pelo menos 1 telefone cadastrado ')
-    }
-
-
     try {
+        await schema.validate(req.body);
+
         const contato = await knex('contatos').insert({
             primeiroNome,
             ultimoNome,
