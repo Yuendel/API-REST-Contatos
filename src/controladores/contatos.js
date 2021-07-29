@@ -107,7 +107,7 @@ const editarTelefone = async (req, res) => {
         return res.status(400).json('O Telefone não foi atualizado');
       }
     }
-    res.status(200).json('Telefones atualizados com sucesso!');
+    return res.status(200).json('Telefones atualizados com sucesso!');
   } catch (error) {
     return res.status(400).json(error.message);
   }
