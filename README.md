@@ -10,6 +10,16 @@ Esta API REST tem a capacidade de:
   
   **Importante:Rest API criada com o intuito de continuar no processo seletivo para a vaga de Desenvolvedor Node na empresa CSP.!**
 
+Para utilizar esta API, instalar com Npm Install ou Yarn as seguintes bibliotecas:
+    "cors";
+    "express";
+    "knex"; 
+    "mysql"; 
+    "nodemon"; 
+    "yup". 
+Podendo iniciala com npm run dev.
+
+
 ### Banco de dados
 *** Querys disponiveis no arquivo "Schema.sql" !**
 # 1ª tabela ("contatos")
@@ -43,8 +53,8 @@ Esta API REST tem a capacidade de:
 	"primeiroNome":"Yuendel",
 	"ultimoNome":"Farias",
 	"email":"yuendel.fb@hotmail.com",
-	"telefones":["07599987741",
-		"01447889571"
+	"telefones":[{"numero": "07599987742"},
+		{"numero": "01447889572"}
 	]
 }
 ```
@@ -53,16 +63,11 @@ Esta API REST tem a capacidade de:
 -Ao menos 1 telefone deve ser informado.
 
   #### `GET` `/listarContatos`
-Endpoint que permite fazer a listagem dos dados de todos os Contatos, não deverá receber conteúdo no corpo da requisição podendo filtrar por: 
+Endpoint que permite fazer a listagem dos dados de todos os Contatos, não deverá receber conteúdo no corpo da requisição, podendo filtrar por: 
 
 
--Nome, passando como parametro como exemplo abaixo:
-
-/listarContatos?nome=Yuendel
-
--Email, passando como parametro como exemplo abaixo:
-
-/listarContatos?email=jotaro.joestar@hotmail.com
+-Nome e/ou email, como exemplo abaixo:
+http://localhost:3000/listarContatos?nome=Joseph&?email=yuendel.fb@hotmail.com
 
   #### `PUT` `/editarContato/:id`
 Endpoint que permite editar um contato:
@@ -70,16 +75,35 @@ Endpoint que permite editar um contato:
 -Apenas campos requisitados serão modificados;
 -Ao menos 1 campo deverá ser informado para a edição;
 -id do contato a ser editado deve ser informado através de parâmetro de rota (params);
--Se existir um telefone a ser modificado, o id do mesmo deverá ser informado no body como no exemplo abaixo.
+-Modifica dados exceto telefones.
 
-Exemplo de body com modificação apenas do primeiro nome, e de 1 dos telefones pertencentes aquele contato:
+Exemplo de body da requisição:
 
 ```json=
 {
 	"primeiroNome":"Joseph",
-	"telefones":[{"id":"2","numero":"12345678"}]
+	"ultimoNome":"joestar",
+	"email":"joseph.email@email.com"
 }
 ```
+
+#### `PUT` `/editarTelefone`
+Endpoint que permite editar telefones de um usuario:
+
+-Deve ser informado ao menos 1 telefone para edição;
+
+Exemplo de body da requisição:
+
+```json=
+{
+	"telefones":[{"id":"8","numero":"3030"},{"id":"7","numero":"2020"}]
+}
+```
+
+ #### `DELETE` `/excluirTelefone/:id`
+Endpoint para excluir um telefone existente. Não deverá receber conteúdo no corpo da requisição, mas deverá receber o ID do telefone através de parâmetro de rota (params). Através do ID o telefone será buscado em banco de dados e excluído.
+
+****Foi vista a importancia da criação de um endPoint de edição/exclusão exclusivo para Telefones para melhor praticidade de implementação da API em uma aplicação!**
 
 
   #### `DELETE` `/excluirContato/:id`

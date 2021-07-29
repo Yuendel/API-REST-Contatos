@@ -37,16 +37,19 @@ const cadastrarContato = async (req, res) => {
 };
 
 const listarContatos = async (req, res) => {
-  const { nome, email } = req.query;
+  const { primeiroNome, ultimoNome, email } = req.query;
 
   try {
     const contatos = await knex('contatos').where((builder) => {
-      if (nome) {
-        builder.where('nome', 'ilike', `%${nome}%`);
+      if (primeiroNome) {
+        builder.where('primeiroNome', 'ilike', `%${primeiroNome}%`);
+      }
+      if (ultimoNome) {
+        builder.where('ultimoNome', 'ilike', `%${ultimoNome}%`);
       }
 
       if (email) {
-        builder.where('email', 'ilike', `%${email}%`);
+        builder.where('email', 'like', `%${email}%`);
       }
     });
 
