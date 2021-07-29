@@ -1,3 +1,4 @@
+/* eslint-disable no-restricted-syntax */
 const knex = require('../conexao');
 const { schema } = require('../validacoes/schemaCadastroContato');
 
@@ -14,20 +15,19 @@ const cadastrarContato = async (req, res) => {
       ultimoNome,
       email,
     });
-
     if (!contato) {
       return res.status(400).json('Não foi possível cadastrar seu contato');
     }
-
-    const novoContato = await knex.select('id').from('contatos');
-
-    try {
-      for (let i = 0; i < telefones.length; i++) {
-        await knex('telefones').insert({ idContato: novoContato[novoContato.length - 1].id, numero: telefones[i] });
+    for (const telefone of telefones) {
+      const telefoneCriado = await knex('telefones').insert({
+        idContato: contato,
+        numero: telefone.numero,
+      });
+      if (!telefoneCriado) {
+        await knex('telefones').where({ idContato: contato }).del();
+        await knex('contatos').where({ id: contato }).del();
+        return res.status(400).json('Não foi possível cadastrar seu contato');
       }
-    } catch (error) {
-      await knex('contatos').where({ id: novoContato[novoContato.length - 1].id }).del();
-      return res.status(400).json('Não foi possível cadastrar seu contato');
     }
 
     return res.status(200).json('Contato cadastrado com sucesso!');
@@ -40,36 +40,22 @@ const listarContatos = async (req, res) => {
   const { nome, email } = req.query;
 
   try {
-    if (nome) {
-      const contatos = await knex.raw(`select contatos.*, telefones.numero,telefones.id as idTelefone from contatos 
-            JOIN
-            telefones on contatos.id = telefones.idContato
-            WHERE contatos.primeiroNome LIKE "%${nome}%" OR contatos.ultimoNome LIKE "%${nome}%"`);
-
-      if (contatos[0].length === 0) {
-        return res.status(400).json(`Não existem contatos com nome ${nome}`);
+    const contatos = await knex('contatos').where((builder) => {
+      if (nome) {
+        builder.where('nome', 'ilike', `%${nome}%`);
       }
 
-      return res.status(200).json(contatos[0]);
-    }
-
-    if (email) {
-      const contatos = await knex.raw(`select contatos.*, telefones.numero, telefones.id as idTelefone from contatos 
-            JOIN
-            telefones on contatos.id = telefones.idContato
-            WHERE contatos.email LIKE "${email}"`);
-
-      if (contatos[0].length === 0) {
-        return res.status(400).json(`Não existem contatos com E-mail ${email}`);
+      if (email) {
+        builder.where('email', 'ilike', `%${email}%`);
       }
+    });
 
-      return res.status(200).json(contatos[0]);
+    for (const contato of contatos) {
+      const telefones = await knex('telefones').where({ idContato: contato.id });
+      contato.telefones = telefones;
     }
 
-    const contatos = await knex.raw(`select contatos.*, telefones.numero, telefones.id as idTelefone from contatos 
-        JOIN
-        telefones on contatos.id = telefones.idContato`);
-    return res.status(200).json(contatos[0]);
+    return res.status(200).json(contatos);
   } catch (error) {
     return res.status(400).json(error.message);
   }
@@ -78,38 +64,71 @@ const listarContatos = async (req, res) => {
 const editarContato = async (req, res) => {
   const { id } = req.params;
   const {
-    primeiroNome, ultimoNome, email, telefones,
+    primeiroNome, ultimoNome, email,
   } = req.body;
 
-  if (!primeiroNome && !ultimoNome && !email && !telefones) {
+  if (!primeiroNome && !ultimoNome && !email) {
     return res.status(404).json('Informe ao menos um campo para atualizaçao do produto');
   }
 
   try {
-    const contato = await knex('contatos').where({ id, id });
+    const contato = await knex('contatos').where({ id });
 
     if (!contato[0]) {
       return res.status(404).json('Contato não encontrado');
     }
     const contatoAtualizado = await knex('contatos').update({ primeiroNome, ultimoNome, email })
-      .where({ id, id });
+      .where({ id });
 
     if (contatoAtualizado === 0) {
       return res.status(400).json('O Contato não foi atualizado');
     }
 
-    if (telefones) {
-      for (let i = 0; i < telefones.length; i++) {
-        const telefoneAtualizado = await knex('telefones').update({ numero: telefones[i].numero })
-          .where({ id: telefones[i].id, id: telefones[i].id });
+    return res.status(200).json('Contato atualizado com sucesso.');
+  } catch (error) {
+    return res.status(400).json(error.message);
+  }
+};
 
-        if (telefoneAtualizado === 0) {
-          return res.status(400).json('O Telefone não foi atualizado');
-        }
+const editarTelefone = async (req, res) => {
+  const {
+    telefones,
+  } = req.body;
+
+  if (!telefones[0]) {
+    res.status(400).json('Informe ao menos um dos telefones para edição!');
+  }
+  try {
+    for (const telefone of telefones) {
+      const telefoneAtualizado = await knex('telefones').update({ numero: telefone.numero })
+        .where({ id: telefone.id });
+
+      if (telefoneAtualizado === 0) {
+        return res.status(400).json('O Telefone não foi atualizado');
       }
     }
+    res.status(200).json('Telefones atualizados com sucesso!');
+  } catch (error) {
+    return res.status(400).json(error.message);
+  }
+};
 
-    return res.status(200).json('Contato atualizado com sucesso.');
+const excluirTelefone = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const telefone = await knex('telefones').where({ id });
+
+    if (!telefone[0]) {
+      return res.status(404).json('Telefone não encontrado');
+    }
+    const telefoneExcluido = await knex('telefones').where({ id }).del();
+
+    if (telefoneExcluido === 0) {
+      return res.status(400).json('O contato não foi excluido');
+    }
+
+    return res.status(200).json('Contato excluido com sucesso');
   } catch (error) {
     return res.status(400).json(error.message);
   }
@@ -119,16 +138,14 @@ const excluirContato = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const contato = await knex('contatos').where({ id, id });
+    const contato = await knex('contatos').where({ id });
 
     if (!contato[0]) {
       return res.status(404).json('Contato não encontrado');
     }
 
-    const contatoExcluido = await knex.raw(`DELETE FROM contatos,telefones 
-        USING contatos,telefones 
-        WHERE contatos.id = ${id} AND
-        telefones.idContato = ${id} `);
+    await knex('telefones').where({ idContato: contato[0].id }).del();
+    const contatoExcluido = await knex('contatos').where({ id }).del();
 
     if (contatoExcluido === 0) {
       return res.status(400).json('O contato não foi excluido');
@@ -144,5 +161,7 @@ module.exports = {
   cadastrarContato,
   listarContatos,
   editarContato,
+  editarTelefone,
+  excluirTelefone,
   excluirContato,
 };
